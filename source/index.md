@@ -46,10 +46,50 @@
 
 ### トークの構成
 
+* 型ヒントについておさらい
 * if文やパターンマッチでの条件指定漏れを検出してくれる`assert_never()`関数
 * 「自分自身」を表す特殊な型「`Self`型」
 * 型エイリアスの使い方を解説
 * `@override`デコレーターでメソッドオーバーライドのミスを検出する
+
+## 型ヒントについておさらい
+
+### 型ヒントとは
+
+* 2015年9月にリリースされたPython 3.5に追加された機能
+* あくまで静的解析ツールに渡す情報
+  * ツールの例：Mypy、Pyright
+* 実行時に型チェックは行わない
+
+### コード例
+
+```{code-block} python
+:caption: 型ヒントの例 ― example.py
+
+def repeat_message(message: str, n: int) -> str:
+    return message * n
+
+print(repeat_message("Hello!", 3))  # OK
+# nに整数以外を渡しているのでNG
+print(repeat_message("Hello!", "3"))
+# 整数型の変数に文字列を渡しているのでNG
+result: int = repeat_message("Hello!", 3)
+```
+
+### 型チェック実行結果
+
+```{code-block} shell
+:caption: example.pyの型チェック実行結果
+
+% mypy example.py
+example.py:6: error: Argument 2 to "repeat_message" has incompatible type "str"; expected "int"  [arg-type]
+example.py:8: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+Found 2 errors in 1 file (checked 1 source file)
+```
+
+### たぶん、ここまではみんな知っているはず
+
+型チェックは、もっと便利な機能があります！
 
 ## if文やパターンマッチでの条件指定漏れを検出してくれる`assert_never()`関数
 
