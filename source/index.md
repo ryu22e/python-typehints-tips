@@ -198,6 +198,101 @@ AssertionError: Expected code to be unreachable, but got: <Color.YELLOW: 2>
 
 ## 「自分自身」を表す特殊な型「`Self`型」
 
+### `Self`型を使わなかった場合の例
+
+```{code-block} python
+:caption: Self型を使わなかった場合の例 ― self_example.py
+
+class Foo:
+    def __init__(self: "Foo") -> None:
+        ...  # 省略
+
+    def call_by_foo(self: "Foo") -> "Foo":
+        """自分自身を戻り値にするメソッド"""
+        return self
+
+foo = Foo()
+foo.call_by_foo()
+```
+
+### このコードは問題がないように見えるが……
+
+```{code-block} shell
+:caption: 型チェックでもエラーにならない
+
+$ mypy self_example.py
+Success: no issues found in 1 source file
+```
+
+### Fooクラスを継承してBarクラスを作ってみる
+
+```{code-block} python
+:caption: Fooクラスを継承してBarクラスを作ってみる ― self_example.py
+
+# （省略）
+
+class Bar(Foo):
+    def __init__(self: "Bar") -> None:
+        ...  # 省略
+
+    def call_by_bar(self: "Bar") -> "Bar":
+        """自分自身を戻り値にするメソッド"""
+        return self
+
+bar = Bar()
+# Foo.call_by_foo()メソッドはselfを返しているのだから、
+# 本来はBarクラスのメソッドを呼べるはず
+bar.call_by_foo().call_by_bar()
+```
+
+### 再度型チェックしてみると……
+
+```{code-block} bash
+:caption: 問題ないはずのコードが型チェッカーではエラーになる
+
+$ mypy self_example.py
+self_example.py:23: error: "Foo" has no attribute "call_by_bar"  [attr-defined]
+Found 1 error in 1 file (checked 1 source file)
+```
+
+### なぜエラーになるのか
+
+* 型ヒント上では、`Foo.call_by_foo()`メソッドの戻り値の型が`"Foo"`になっているから
+* `Foo`クラスには`call_by_bar()`メソッドは定義されていない
+* 文法上は問題ないのに、型ヒントのせいでエラーになってしまっている
+
+### どうすればいいのか
+
+動的に型名を置き換えてくれる`Self`型を使う。
+
+### self_example.pyに`Self`型を使ってみる
+
+```{code-block} python
+:caption: `Foo`クラス、`Bar`クラスに`Self`型を使う ― self_example.py
+
+from typing import Self
+
+class Foo:
+    def __init__(self: Self) -> None:
+        ...  # 省略
+
+    # SelfはFooクラスとFooクラスを継承したクラスを意味する
+    def call_by_foo(self: Self) -> Self:
+        """自分自身を戻り値にするメソッド"""
+        return self
+# Barクラスも同様に書き換える
+# （省略）
+```
+
+### 再度self_example.pyを型チェック
+
+```{code-block} bash
+:caption: 今度はエラーにならない
+
+$ mypy self_example.py
+Success: no issues found in 1 source file
+```
+
 ## 型エイリアスの使い方を解説
 
 ## `@override`デコレーターでメソッドオーバーライドのミスを検出する
