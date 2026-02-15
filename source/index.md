@@ -93,6 +93,87 @@ Found 2 errors in 1 file (checked 1 source file)
 
 ## if文やパターンマッチでの条件指定漏れを検出してくれる`assert_never()`関数
 
+### まず、こんな列挙型を定義する
+
+```{code-block} python
+:caption: assert_never()関数の例(1) ― assert_never_example.py
+
+import enum
+
+class Color(enum.Enum):
+    RED = 0
+    BLUE = 1
+    YELLOW = 2
+```
+
+### Colorをパターンマッチで判定するコードを書く
+
+```{code-block} python
+:caption: assert_never()関数の例(2) ― assert_never_example.py
+
+# （省略）
+def get_color_name_jp(color: Color) -> str:
+    match color:
+        case Color.RED:
+            return "赤"
+        case Color.BLUE:
+            return "青"
+        # Color.YELLOWを書き忘れている
+        case _:
+            return "Unknown"
+
+print(get_color_name_jp(Color.RED))  # 「赤」
+print(get_color_name_jp(Color.BLUE))  # 「青」
+print(get_color_name_jp(Color.YELLOW))  # 「黄」ではなく「Unknown」
+```
+
+### assert_never_example.pyの実行結果
+
+```{code-block} shell
+:caption: assert_never_example.pyの実行結果
+
+% python assert_never_example.py
+赤
+青
+Unknown
+```
+
+### このミスを防ぐにはどうすればいいか？
+
+* テストコードを書けば防げるが……
+* テストケースに漏れがあればミスに気づかない
+
+### こんな時便利なのが`assert_never()`関数
+
+```{code-block} python
+:caption: assert_never()関数の例(3) ― assert_never_example.py
+
+from typing import assert_never
+
+# （省略）
+def get_color_name_jp(color: Color) -> str:
+    match color:
+        case Color.RED:
+            return "赤"
+        case Color.BLUE:
+            return "青"
+        # Color.YELLOWを書き忘れている
+        case _:
+            assert_never(color)  # ここを変更
+
+# （省略）
+```
+
+### 型チェッカーが条件指定漏れを検出してくれる
+
+```{code-block} shell
+:caption: assert_never_example.pyの型チェック結果
+
+% mypy assert_never_example.py
+assert_never_example.py:17: error: Argument 1 to "assert_never" has incompatible type "Literal[Color.YELLOW]"; expected "Never"  [arg-type]
+Found 1 error in 1 file (checked 1 source file)
+```
+
 ## 「自分自身」を表す特殊な型「`Self`型」
 
 ## 型エイリアスの使い方を解説
