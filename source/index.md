@@ -174,6 +174,28 @@ assert_never_example.py:17: error: Argument 1 to "assert_never" has incompatible
 Found 1 error in 1 file (checked 1 source file)
 ```
 
+### このコードを実行するとどうなるか？
+
+`assert_never()`関数が`AssertionError`を送出する。
+
+```{code-block} shell
+:caption: assert_never_example.pyの実行結果
+
+% python assert_never_example.py
+赤
+青
+Traceback (most recent call last):
+  File "/***/assert_never_example.py", line 21, in <module>
+    print(get_color_name_jp(Color.YELLOW))
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/***/assert_never_example.py", line 17, in get_color_name_jp
+    assert_never(color)  # ここを変更
+    ~~~~~~~~~~~~^^^^^^^
+  File "/***/typing.py", line 2582, in assert_never
+    raise AssertionError(f"Expected code to be unreachable, but got: {value}")
+AssertionError: Expected code to be unreachable, but got: <Color.YELLOW: 2>
+```
+
 ## 「自分自身」を表す特殊な型「`Self`型」
 
 ## 型エイリアスの使い方を解説
